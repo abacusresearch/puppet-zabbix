@@ -109,6 +109,9 @@
 # [*database_port*]
 #   Database port when not using local socket. Ignored for sqlite.
 #
+# [*database_double*]
+#   enable DOUBLE_IEEE754 for extended range of numeric (float) values
+#
 # [*zabbix_server*]
 #   The fqdn name of the host running the zabbix-server. When single node:
 #   localhost
@@ -215,6 +218,7 @@ class zabbix::web (
   $database_password                                                  = $zabbix::params::server_database_password,
   $database_socket                                                    = $zabbix::params::server_database_socket,
   $database_port                                                      = $zabbix::params::server_database_port,
+  $database_double                                                    = $zabbix::params::server_database_double,
   $zabbix_server                                                      = $zabbix::params::zabbix_server,
   Optional[String] $zabbix_server_name                                = $zabbix::params::zabbix_server,
   $zabbix_listenport                                                  = $zabbix::params::server_listenport,
