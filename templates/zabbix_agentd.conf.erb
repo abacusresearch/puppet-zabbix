@@ -310,7 +310,7 @@ LoadModulePath=<%= @loadmodulepath %>
 # Mandatory: yes, if TLS certificate or PSK parameters are defined (even for 'unencrypted' connection)
 # Default:
 # TLSAccept=unencrypted
-<% if @tlsaccept %>TLSAccept=<% if String(type(@tlsaccept,'generalized')).index('Array') == 0 %><%= scope.call_function('join', [@tlsaccept, ',']) %><% else %><%= @tlsaccept %><% end %><% end %>
+<% if @tlsaccept %>TLSAccept=<% if scope.call_function('type',[@tlsaccept,'generalized']) == Array %><%= scope.call_function('join', [@tlsaccept, ',']) %><% else %><%= @tlsaccept %><% end %><% end %>
 
 ### Option: TLSCAFile
 #	Full pathname of a file containing the top-level CA(s) certificates for
