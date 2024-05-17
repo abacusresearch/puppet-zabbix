@@ -1,8 +1,11 @@
+# frozen_string_literal: true
+
+require 'deep_merge'
 require 'spec_helper'
 
 describe 'zabbix::repo' do
-  on_supported_os.each do |os, facts|
-    context "on #{os} " do
+  on_supported_os(baseline_os_hash).each do |os, facts|
+    context "on #{os}" do
       let :facts do
         facts
       end
@@ -17,6 +20,9 @@ describe 'zabbix::repo' do
         it { is_expected.to contain_class('zabbix::params') }
         it { is_expected.to contain_class('zabbix::repo') }
 
+        it { is_expected.to contain_apt__key('zabbix-A1848F5') } if facts[:os]['family'] == 'Debian'
+        it { is_expected.to contain_apt__key('zabbix-FBABD5F') } if facts[:os]['family'] == 'Debian'
+
         context 'when repo_location is "https://example.com/foo"' do
           let :params do
             {
@@ -28,117 +34,26 @@ describe 'zabbix::repo' do
         end
 
         case facts[:os]['release']['major']
-        when '6'
-          context 'on Debian 6 and Zabbix 2.0' do
+        when '10'
+          context 'on Debian 10 and Zabbix 5.0' do
             let :params do
               {
-                zabbix_version: '2.0',
+                zabbix_version: '5.0',
                 manage_repo: true
               }
             end
 
-            it { is_expected.to contain_apt__source('zabbix').with_location('http://repo.zabbix.com/zabbix/2.0/debian/') }
+            it { is_expected.to contain_apt__source('zabbix').with_location('http://repo.zabbix.com/zabbix/5.0/debian/') }
           end
+        end
 
-        when '7'
-          context 'on Debian 7 and Zabbix 2.0' do
-            let :params do
-              {
-                zabbix_version: '2.0',
-                manage_repo: true
-              }
+        %w[arm64 aarch64].each do |arch|
+          context "on #{arch}" do
+            let :facts do
+              facts.deep_merge(os: { architecture: arch })
             end
 
-            it { is_expected.to contain_apt__source('zabbix').with_location('http://repo.zabbix.com/zabbix/2.0/debian/') }
-          end
-
-          context 'on Debian 7 and Zabbix 2.2' do
-            let :params do
-              {
-                zabbix_version: '2.2',
-                manage_repo: true
-              }
-            end
-
-            it { is_expected.to contain_apt__source('zabbix').with_location('http://repo.zabbix.com/zabbix/2.2/debian/') }
-          end
-
-          context 'on Debian 7 and Zabbix 2.4' do
-            let :params do
-              {
-                zabbix_version: '2.4',
-                manage_repo: true
-              }
-            end
-
-            it { is_expected.to contain_apt__source('zabbix').with_location('http://repo.zabbix.com/zabbix/2.4/debian/') }
-          end
-        when '8'
-
-          context 'on Debian 8 and Zabbix 3.0' do
-            let :params do
-              {
-                zabbix_version: '3.0',
-                manage_repo: true
-              }
-            end
-
-            it { is_expected.to contain_apt__source('zabbix').with_location('http://repo.zabbix.com/zabbix/3.0/debian/') }
-          end
-        when '12.04'
-          context 'on Ubuntu 12.04 and Zabbix 2.0' do
-            let :params do
-              {
-                zabbix_version: '2.0',
-                manage_repo: true
-              }
-            end
-
-            it { is_expected.to contain_apt__source('zabbix').with_location('http://repo.zabbix.com/zabbix/2.0/ubuntu/') }
-          end
-
-          context 'on Ubuntu 12.04 and Zabbix 2.2' do
-            let :params do
-              {
-                zabbix_version: '2.2',
-                manage_repo: true
-              }
-            end
-
-            it { is_expected.to contain_apt__source('zabbix').with_location('http://repo.zabbix.com/zabbix/2.2/ubuntu/') }
-          end
-
-          context 'on Ubuntu 12.04 and Zabbix 2.4' do
-            let :params do
-              {
-                zabbix_version: '2.4',
-                manage_repo: true
-              }
-            end
-
-            it { is_expected.to contain_apt__source('zabbix').with_location('http://repo.zabbix.com/zabbix/2.4/ubuntu/') }
-          end
-        when '14.04'
-          context 'on Ubuntu 14.04 and Zabbix 2.4' do
-            let :params do
-              {
-                zabbix_version: '2.4',
-                manage_repo: true
-              }
-            end
-
-            it { is_expected.to contain_apt__source('zabbix').with_location('http://repo.zabbix.com/zabbix/2.4/ubuntu/') }
-          end
-
-          context 'on Ubuntu 14.04 and Zabbix 3.0' do
-            let :params do
-              {
-                zabbix_version: '3.0',
-                manage_repo: true
-              }
-            end
-
-            it { is_expected.to contain_apt__source('zabbix').with_location('http://repo.zabbix.com/zabbix/3.0/ubuntu/') }
+            it { is_expected.to contain_apt__source('zabbix').with_location("http://repo.zabbix.com/zabbix/6.0/#{facts[:os]['name'].downcase}-arm64/") }
           end
         end
       when 'RedHat'
@@ -169,118 +84,52 @@ describe 'zabbix::repo' do
         end
 
         case facts[:os]['release']['major']
-        when '5'
-          context 'on RedHat 5 and Zabbix 2.0' do
-            let :params do
-              {
-                zabbix_version: '2.0',
-                manage_repo: true
-              }
-            end
-
-            it { is_expected.to contain_yumrepo('zabbix').with_baseurl('https://repo.zabbix.com/zabbix/2.0/rhel/5/$basearch/') }
-            it { is_expected.to contain_yumrepo('zabbix').with_gpgkey('https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX') }
-            it { is_expected.to contain_yumrepo('zabbix-nonsupported').with_baseurl('https://repo.zabbix.com/non-supported/rhel/5/$basearch/') }
-            it { is_expected.to contain_yumrepo('zabbix-nonsupported').with_gpgkey('https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX') }
-          end
-        when '6'
-
-          context 'on RedHat 6 and Zabbix 2.0' do
-            let :params do
-              {
-                zabbix_version: '2.0',
-                manage_repo: true
-              }
-            end
-
-            it { is_expected.to contain_yumrepo('zabbix').with_baseurl('https://repo.zabbix.com/zabbix/2.0/rhel/6/$basearch/') }
-            it { is_expected.to contain_yumrepo('zabbix').with_gpgkey('https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX') }
-            it { is_expected.to contain_yumrepo('zabbix-nonsupported').with_baseurl('https://repo.zabbix.com/non-supported/rhel/6/$basearch/') }
-            it { is_expected.to contain_yumrepo('zabbix-nonsupported').with_gpgkey('https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX') }
-          end
-
-          context 'on RedHat 6 and Zabbix 2.2' do
-            let :params do
-              {
-                zabbix_version: '2.2',
-                manage_repo: true
-              }
-            end
-
-            it { is_expected.to contain_yumrepo('zabbix').with_baseurl('https://repo.zabbix.com/zabbix/2.2/rhel/6/$basearch/') }
-            it { is_expected.to contain_yumrepo('zabbix').with_gpgkey('https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX') }
-            it { is_expected.to contain_yumrepo('zabbix-nonsupported').with_baseurl('https://repo.zabbix.com/non-supported/rhel/6/$basearch/') }
-            it { is_expected.to contain_yumrepo('zabbix-nonsupported').with_gpgkey('https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX') }
-          end
-
-          context 'on RedHat 6 and Zabbix 2.4' do
-            let :params do
-              {
-                zabbix_version: '2.4',
-                manage_repo: true
-              }
-            end
-
-            it { is_expected.to contain_yumrepo('zabbix').with_baseurl('https://repo.zabbix.com/zabbix/2.4/rhel/6/$basearch/') }
-            it { is_expected.to contain_yumrepo('zabbix').with_gpgkey('https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX') }
-            it { is_expected.to contain_yumrepo('zabbix-nonsupported').with_baseurl('https://repo.zabbix.com/non-supported/rhel/6/$basearch/') }
-            it { is_expected.to contain_yumrepo('zabbix-nonsupported').with_gpgkey('https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX') }
-          end
-
-          context 'on RedHat 6 and Zabbix 3.0' do
-            let :params do
-              {
-                zabbix_version: '3.0',
-                manage_repo: true
-              }
-            end
-
-            it { is_expected.to contain_yumrepo('zabbix').with_gpgkey('https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX') }
-            it { is_expected.to contain_yumrepo('zabbix-nonsupported').with_baseurl('https://repo.zabbix.com/non-supported/rhel/6/$basearch/') }
-            it { is_expected.to contain_yumrepo('zabbix-nonsupported').with_gpgkey('https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX') }
-          end
-
-          context 'on RedHat 6 and Zabbix 3.2' do
-            let :params do
-              {
-                zabbix_version: '3.2',
-                manage_repo: true
-              }
-            end
-
-            it { is_expected.to contain_yumrepo('zabbix').with_baseurl('https://repo.zabbix.com/zabbix/3.2/rhel/6/$basearch/') }
-            it { is_expected.to contain_yumrepo('zabbix').with_gpgkey('https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX-A14FE591') }
-            it { is_expected.to contain_yumrepo('zabbix-nonsupported').with_baseurl('https://repo.zabbix.com/non-supported/rhel/6/$basearch/') }
-            it { is_expected.to contain_yumrepo('zabbix-nonsupported').with_gpgkey('https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX-79EA5ED4') }
-          end
         when '7'
-
-          context 'on RedHat 7 and Zabbix 3.0' do
+          context 'on RedHat 7 and Zabbix 5.0' do
             let :params do
               {
-                zabbix_version: '3.0',
+                zabbix_version: '5.0',
                 manage_repo: true
               }
             end
 
-            it { is_expected.to contain_yumrepo('zabbix').with_baseurl('https://repo.zabbix.com/zabbix/3.0/rhel/7/$basearch/') }
-            it { is_expected.to contain_yumrepo('zabbix').with_gpgkey('https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX') }
-            it { is_expected.to contain_yumrepo('zabbix-nonsupported').with_baseurl('https://repo.zabbix.com/non-supported/rhel/7/$basearch/') }
-            it { is_expected.to contain_yumrepo('zabbix-nonsupported').with_gpgkey('https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX') }
-          end
-
-          context 'on RedHat 7 and Zabbix 3.2' do
-            let :params do
-              {
-                zabbix_version: '3.2',
-                manage_repo: true
-              }
-            end
-
-            it { is_expected.to contain_yumrepo('zabbix').with_baseurl('https://repo.zabbix.com/zabbix/3.2/rhel/7/$basearch/') }
+            it { is_expected.to contain_yumrepo('zabbix').with_baseurl('https://repo.zabbix.com/zabbix/5.0/rhel/7/$basearch/') }
             it { is_expected.to contain_yumrepo('zabbix').with_gpgkey('https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX-A14FE591') }
             it { is_expected.to contain_yumrepo('zabbix-nonsupported').with_baseurl('https://repo.zabbix.com/non-supported/rhel/7/$basearch/') }
             it { is_expected.to contain_yumrepo('zabbix-nonsupported').with_gpgkey('https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX-79EA5ED4') }
+            it { is_expected.to contain_yumrepo('zabbix-frontend') }
+
+            it { is_expected.to contain_package('zabbix-required-scl-repo').with_ensure('latest').with_name('centos-release-scl') } if facts[:os]['name'] == 'CentOS'
+            it { is_expected.to contain_package('zabbix-required-scl-repo').with_ensure('latest').with_name('oracle-softwarecollection-release-el7') } if facts[:os]['name'] == 'OracleLinux'
+          end
+        when '9'
+
+          context 'on RedHat 9 and Zabbix 5.0' do
+            let :params do
+              {
+                zabbix_version: '5.0',
+                manage_repo: true
+              }
+            end
+
+            it { is_expected.to contain_yumrepo('zabbix').with_baseurl('https://repo.zabbix.com/zabbix/5.0/rhel/9/$basearch/') }
+            it { is_expected.to contain_yumrepo('zabbix').with_gpgkey('https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX-08EFA7DD') }
+            it { is_expected.to contain_yumrepo('zabbix-nonsupported').with_baseurl('https://repo.zabbix.com/non-supported/rhel/9/$basearch/') }
+            it { is_expected.to contain_yumrepo('zabbix-nonsupported').with_gpgkey('https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX-08EFA7DD') }
+          end
+
+          context 'on RedHat 9 and Zabbix 6.0' do
+            let :params do
+              {
+                zabbix_version: '6.0',
+                manage_repo: true
+              }
+            end
+
+            it { is_expected.to contain_yumrepo('zabbix').with_baseurl('https://repo.zabbix.com/zabbix/6.0/rhel/9/$basearch/') }
+            it { is_expected.to contain_yumrepo('zabbix').with_gpgkey('https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX-08EFA7DD') }
+            it { is_expected.to contain_yumrepo('zabbix-nonsupported').with_baseurl('https://repo.zabbix.com/non-supported/rhel/9/$basearch/') }
+            it { is_expected.to contain_yumrepo('zabbix-nonsupported').with_gpgkey('https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX-08EFA7DD') }
           end
         end
       end

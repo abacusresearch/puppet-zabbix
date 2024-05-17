@@ -1,19 +1,39 @@
+# frozen_string_literal: true
+
 def prepare_host
-  if fact('os.family') == 'RedHat'
-    shell('rm -rf /etc/yum.repos.d/Zabbix*.repo; rm -rf /var/cache/yum/x86_64/*/Zabbix*; yum clean all --verbose')
-    # The CentOS docker image has a yum config that won't install docs, to keep used space low
-    # zabbix packages their SQL file as doc, we need that for bootstrapping the database
-    if fact('os.release.major').to_i == 7
-      shell('sed -i "/nodocs/d" /etc/yum.conf')
-    end
-  end
-  cleanup_script = <<-SHELL
-  /opt/puppetlabs/bin/puppet resource service zabbix-server ensure=stopped
-  /opt/puppetlabs/bin/puppet resource package zabbix-server-pgsql ensure=purged
-  rm -f /etc/zabbix/.*done
-  if id postgres > /dev/null 2>&1; then
-    su - postgres -c "psql -c 'drop database if exists zabbix_server;'"
-  fi
+  shell('yum clean all --verbose; rm -rf /etc/yum.repos.d/Zabbix*.repo') if fact('os.family') == 'RedHat'
+
+  apply_manifest <<~PUPPET
+    $services = $facts['os']['family'] ? {
+      'RedHat' => ['zabbix-server', 'httpd', 'zabbix-agentd', 'zabbix-agent', 'zabbix-agent2'],
+      'Debian' => ['zabbix-server', 'apache2', 'zabbix-agentd', 'zabbix-agent', 'zabbix-agent2'],
+      default  => ['zabbix-agentd', 'zabbix-agent', 'zabbix-agent2'],
+    }
+    service { $services:
+      ensure => stopped
+    }
+
+    $packages = $facts['os']['family'] ? {
+      'RedHat' => ['zabbix-server-pgsql', 'zabbix-server-pgsql-scl', 'zabbix-web', 'zabbix-web-pgsql', 'zabbix-web-pgsql-scl', 'zabbix-frontend-php', 'zabbix-sql-scripts', 'zabbix-agent', 'zabbix-agent2'],
+      'Debian' => ['zabbix-server-pgsql', 'zabbix-web-pgsql', 'zabbix-frontend-php', 'zabbix-sql-scripts', 'zabbix-agent', 'zabbix-agent2'],
+      default  => ['zabbix-agent', 'zabbix-agent2'],
+    }
+
+    $pkg_ensure = $facts['os']['family'] ? {
+      'Archlinux' => absent,
+      default     => purged,
+    }
+
+    package { $packages:
+      ensure => $pkg_ensure
+    }
+  PUPPET
+
+  shell <<~SHELL
+    /opt/puppetlabs/puppet/bin/gem uninstall zabbixapi -a
+    rm -f /etc/zabbix/.*done
+    if id postgres > /dev/null 2>&1; then
+      su - postgres -c "psql -c 'drop database if exists zabbix_server;'"
+    fi
   SHELL
-  shell(cleanup_script)
 end

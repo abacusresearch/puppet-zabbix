@@ -1,5 +1,8 @@
+# frozen_string_literal: true
+
 require_relative '../zabbix'
 Puppet::Type.type(:zabbix_hostgroup).provide(:ruby, parent: Puppet::Provider::Zabbix) do
+  desc 'Puppet provider for managing Zabbix hostgroups. It defines methods to create, check if exists, and destroy Zabbix hostgroups using the Zabbix API.'
   confine feature: :zabbixapi
 
   def self.instances
@@ -22,8 +25,7 @@ Puppet::Type.type(:zabbix_hostgroup).provide(:ruby, parent: Puppet::Provider::Za
 
   def create
     # Connect to zabbix api
-    hgid = zbx.hostgroups.create(name: @resource[:name])
-    hgid
+    zbx.hostgroups.create(name: @resource[:name])
   end
 
   def exists?

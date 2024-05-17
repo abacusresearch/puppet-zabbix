@@ -1,5 +1,8 @@
+# frozen_string_literal: true
+
 require_relative '../zabbix'
 Puppet::Type.type(:zabbix_proxy).provide(:ruby, parent: Puppet::Provider::Zabbix) do
+  desc 'Puppet provider for managing Zabbix proxies. It uses the Zabbix API to create, read, update and delete hosts, as well as changing them between active and passive modes.'
   confine feature: :zabbixapi
 
   def initialize(value = {})
@@ -40,13 +43,13 @@ Puppet::Type.type(:zabbix_proxy).provide(:ruby, parent: Puppet::Provider::Zabbix
       ensure: :present,
       # Proxy object properties
       proxyid: p['proxyid'].to_i,
-      name:    p['host'],
-      mode:    status_to_mode(p['status']),
+      name: p['host'],
+      mode: status_to_mode(p['status']),
       # Proxy Interface object properties
       interfaceid: p['interface'].is_a?(Hash) ? p['interface']['interfaceid'] : nil,
-      ipaddress:   p['interface'].is_a?(Hash) ? p['interface']['ip'] : nil,
-      use_ip:      if p['interface'].is_a?(Hash) then p['interface']['useip'] == '1' ? :true : :false end,
-      port:        p['interface'].is_a?(Hash) ? p['interface']['port'].to_i : nil
+      ipaddress: p['interface'].is_a?(Hash) ? p['interface']['ip'] : nil,
+      use_ip: if p['interface'].is_a?(Hash) then p['interface']['useip'] == '1' ? :true : :false end,
+      port: p['interface'].is_a?(Hash) ? p['interface']['port'].to_i : nil
     }
   end
 
@@ -179,6 +182,7 @@ Puppet::Type.type(:zabbix_proxy).provide(:ruby, parent: Puppet::Provider::Zabbix
 
     # At present, the only properties other than mode that can be updated are the interface properties applicable to passive proxies only.
     raise Puppet::Error, "Can't update proxy interface properties for an active proxy" unless @property_hash[:mode] == :passive
+
     update_interface_properties
   end
 
@@ -195,6 +199,7 @@ Puppet::Type.type(:zabbix_proxy).provide(:ruby, parent: Puppet::Provider::Zabbix
 
   def self.mode_to_status(mode)
     return 5 if mode == :active
+
     6
   end
 end

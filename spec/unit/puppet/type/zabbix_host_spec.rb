@@ -1,33 +1,34 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 require 'unit/puppet/x/spec_zabbix_types'
 
 # rubocop:disable RSpec/LetBeforeExamples
 describe Puppet::Type.type(:zabbix_host) do
   describe 'when validating params' do
-    [
-      :group_create,
-      :hostname
+    %i[
+      group_create
+      hostname
     ].each do |param|
-      it "should have a #{param} parameter" do
+      it "has a #{param} parameter" do
         expect(described_class.attrtype(param)).to eq(:param)
       end
     end
   end
 
   describe 'when validating properties' do
-    [
-      :group,
-      :groups,
-      :id,
-      :interfaceid,
-      :ipaddress,
-      :port,
-      :proxy,
-      :templates,
-      :macros,
-      :use_ip
+    %i[
+      groups
+      id
+      interfaceid
+      ipaddress
+      port
+      proxy
+      templates
+      macros
+      use_ip
     ].each do |param|
-      it "should have a #{param} property" do
+      it "has a #{param} property" do
         expect(described_class.attrtype(param)).to eq(:property)
       end
     end
@@ -35,12 +36,12 @@ describe Puppet::Type.type(:zabbix_host) do
 
   describe 'munge_boolean' do
     {
-      true    => true,
-      false   => false,
-      'true'  => true,
+      true => true,
+      false => false,
+      'true' => true,
       'false' => false,
-      :true   => true,
-      :false  => false
+      :true => true,
+      :false => false
     }.each do |key, value|
       it "munges #{key.inspect} to #{value}" do
         expect(described_class.new(name: 'nobody').munge_boolean(key)).to eq value
@@ -72,10 +73,6 @@ describe Puppet::Type.type(:zabbix_host) do
   describe 'properties' do
     describe 'ensure' do
       it_behaves_like 'generic ensurable', :present
-    end
-
-    describe 'group' do
-      it_behaves_like 'validated property', :group, nil, ['group1', 'Group One']
     end
 
     describe 'groups' do

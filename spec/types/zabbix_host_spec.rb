@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe 'zabbix_host' do
@@ -7,7 +9,6 @@ describe 'zabbix_host' do
     it { is_expected.to be_valid_type.with_provider(:ruby) }
 
     it { is_expected.to be_valid_type.with_properties('ensure') }
-    it { is_expected.to be_valid_type.with_properties('group') }
     it { is_expected.to be_valid_type.with_properties('groups') }
     it { is_expected.to be_valid_type.with_properties('id') }
     it { is_expected.to be_valid_type.with_properties('interfaceid') }

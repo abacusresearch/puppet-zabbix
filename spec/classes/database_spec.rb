@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe 'zabbix::database' do
@@ -5,23 +7,22 @@ describe 'zabbix::database' do
     'rspec.puppet.com'
   end
 
-  on_supported_os.each do |os, facts|
+  on_supported_os(baseline_os_hash).each do |os, facts|
     next if facts[:os]['name'] == 'windows'
-    context "on #{os} " do
+
+    context "on #{os}" do
       let :facts do
         facts
       end
 
       let :pre_condition do
         <<-EOS
-          include 'postgresql::server'
-          if $::osfamily == 'Gentoo' {
+          if $facts['os']['family'] == 'Gentoo' {
             # We don't need the package to be installed as its the same for the server.
             class { 'mysql::client':
               package_manage => false,
             }
           }
-          include 'mysql::server'
         EOS
       end
 
