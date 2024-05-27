@@ -356,7 +356,7 @@ describe 'zabbix::agent' do
         if facts[:kernel] == 'Linux'
           let :params do
             {
-              tlsaccept: ['cert']
+              tlsaccept: %w[cert]
             }
           end
 
@@ -368,7 +368,7 @@ describe 'zabbix::agent' do
         if facts[:kernel] == 'Linux'
           let :params do
             {
-              tlsaccept: ['unencrypted','cert']
+              tlsaccept: %w[unencrypted cert]
             }
           end
 

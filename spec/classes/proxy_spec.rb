@@ -419,7 +419,7 @@ describe 'zabbix::proxy' do
         context 'tlsaccept with one string value' do
           let :params do
             {
-              tlsaccept: 'cert',
+              tlsaccept: 'cert'
             }
           end
 
@@ -429,7 +429,7 @@ describe 'zabbix::proxy' do
         context 'tlsaccept with one value array' do
           let :params do
             {
-              tlsaccept: ['cert']
+              tlsaccept: %w[cert]
             }
           end
 
@@ -439,7 +439,7 @@ describe 'zabbix::proxy' do
         context 'tlsaccept with two value array' do
           let :params do
             {
-              tlsaccept: ['unencrypted','cert']
+              tlsaccept: %w[unencrypted cert]
             }
           end
 
